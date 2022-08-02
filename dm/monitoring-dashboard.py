@@ -24,8 +24,8 @@ def create_dashboard_resource(context):
     """ Creates the Cloud Monitoring Dashboard resource. """
     properties = context.properties
     project_id = properties.get("project", context.env["project"])
-    dash_name = "projects/{}/dashboards/{}".format(project_id, uuid.uuid4())
-    parent = "projects/{}".format(project_id)
+    dash_name = f"projects/{project_id}/dashboards/{uuid.uuid4()}"
+    parent = f"projects/{project_id}"
     config_file = properties.get("config_file")
 
     # Read the dashboard json file. Fix potential trailing comma errors
@@ -37,28 +37,25 @@ def create_dashboard_resource(context):
         "parent": parent,
         "name": dash_name,
     }
-    props.update(data)
+    props |= data
 
     # The type provider 'monitoring-dashboardv1type' needs to be created first!
     # The discovery API: https://monitoring.googleapis.com/$discovery/rest?version=v1
     dashboard_config = [
         {
-            "action": "{}/monitoring-dashboardv1type:monitoring.projects.dashboards.create".format(
-                project_id
-            ),
+            "action": f"{project_id}/monitoring-dashboardv1type:monitoring.projects.dashboards.create",
             "metadata": {"runtimePolicy": ["CREATE"]},
-            "name": "{}-create".format(context.env["name"]),
+            "name": f'{context.env["name"]}-create',
             "properties": props,
         },
         {
-            "action": "{}/monitoring-dashboardv1type:monitoring.projects.dashboards.delete".format(
-                project_id
-            ),
+            "action": f"{project_id}/monitoring-dashboardv1type:monitoring.projects.dashboards.delete",
             "metadata": {"runtimePolicy": ["DELETE"]},
-            "name": "{}-delete".format(context.env["name"]),
+            "name": f'{context.env["name"]}-delete',
             "properties": {"name": dash_name},
         },
     ]
+
 
     return (
         dashboard_config,
